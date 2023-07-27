@@ -354,11 +354,16 @@ func register(uin int64, androidID, guid []byte, qimei36, key string) {
 	if !strings.HasSuffix(signServer, "/") {
 		signServer += "/"
 	}
+
+    var lastTimeout = download.GetTimeout()
+	download.SetTimeout(50 * time.Second) // 欸超时变成50s了
 	resp, err := download.Request{
 		Method: http.MethodGet,
 		URL: signServer + "register" + fmt.Sprintf("?uin=%v&android_id=%v&guid=%v&qimei36=%v&key=%s",
 			uin, hex.EncodeToString(androidID), hex.EncodeToString(guid), qimei36, key),
 	}.Bytes()
+	download.SetTimeout(lastTimeout) // 欸又变回去了:-)
+
 	if err != nil {
 		log.Warnf("注册QQ实例时出现错误: %v server: %v", err, signServer)
 		return

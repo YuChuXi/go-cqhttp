@@ -65,6 +65,10 @@ func SetTimeout(t time.Duration) {
 	clienth2.Timeout = t
 }
 
+func SetTimeout() time.Duration {
+	return t
+}
+
 // Request is a file download request
 type Request struct {
 	Method string
