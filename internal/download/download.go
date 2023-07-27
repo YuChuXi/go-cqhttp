@@ -65,7 +65,7 @@ func SetTimeout(t time.Duration) {
 	clienth2.Timeout = t
 }
 
-func SetTimeout() time.Duration {
+func GetTimeout() time.Duration {
 	return client.Timeout
 }
 
