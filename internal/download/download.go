@@ -66,7 +66,7 @@ func SetTimeout(t time.Duration) {
 }
 
 func SetTimeout() time.Duration {
-	return t
+	return client.Timeout
 }
 
 // Request is a file download request
