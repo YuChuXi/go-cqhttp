@@ -7,6 +7,7 @@ session.token
 device.json
 data/
 logs/
+output/
 internal/btree/*.lock
 internal/btree/*.db
 
