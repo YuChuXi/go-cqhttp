@@ -329,12 +329,17 @@ func _sign(seq uint64, uin string, cmd string, qua string, buff []byte) (sign []
 	if !strings.HasSuffix(signServer, "/") {
 		signServer += "/"
 	}
+
+    var lastTimeout = download.GetTimeout()
+	download.SetTimeout(60 * time.Second) // 欸超时变成60s了
 	response, err := download.Request{
 		Method: http.MethodPost,
 		URL:    signServer + "sign",
 		Header: map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
 		Body:   bytes.NewReader([]byte(fmt.Sprintf("uin=%v&qua=%s&cmd=%s&seq=%v&buffer=%v", uin, qua, cmd, seq, hex.EncodeToString(buff)))),
 	}.Bytes()
+	download.SetTimeout(lastTimeout) // 欸又变回去了:-)
+
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -356,7 +361,7 @@ func register(uin int64, androidID, guid []byte, qimei36, key string) {
 	}
 
     var lastTimeout = download.GetTimeout()
-	download.SetTimeout(50 * time.Second) // 欸超时变成50s了
+	download.SetTimeout(60 * time.Second) // 欸超时变成60s了
 	resp, err := download.Request{
 		Method: http.MethodGet,
 		URL: signServer + "register" + fmt.Sprintf("?uin=%v&android_id=%v&guid=%v&qimei36=%v&key=%s",
