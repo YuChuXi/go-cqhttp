@@ -185,7 +185,7 @@ func LoginInteract() {
 				log.Warn("自动刷新 token 已关闭，token 过期后获取签名时将不会立即尝试刷新获取新 token")
 			}
 		} else {
-			log.Warn("签名服务器版本 <= 1.1.0 ，无法使用刷新 token 等操作，建议使用 1.1.6 版本及以上签名服务器")
+      log.Warn("签名服务器版本 <= 1.1.0 ，无法使用刷新 token 等操作，建议使用 1.1.6 版本及以上签名服务器")
 		}
 	} else {
 		log.Warnf("警告: 未配置签名服务器, 这可能会导致登录 45 错误码或发送消息被风控")
@@ -309,6 +309,7 @@ func LoginInteract() {
 	download.SetTimeout(time.Duration(base.HTTPTimeout) * time.Second)
 	if !base.FastStart {
 		log.Infof("正在检查协议更新...")
+		download.SetTimeout(time.Second * 5) // 防止协议更新堵塞过久
 		currentVersionName := device.Protocol.Version().SortVersionName
 		remoteVersion, err := getRemoteLatestProtocolVersion(int(device.Protocol.Version().Protocol))
 		if err == nil {
