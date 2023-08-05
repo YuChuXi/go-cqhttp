@@ -383,9 +383,6 @@ func signRegister(uin int64, androidID, guid []byte, qimei36, key string) {
 	if !strings.HasSuffix(signServer, "/") {
 		signServer += "/"
 	}
-
-    var lastTimeout = download.GetTimeout()
-	download.SetTimeout(50 * time.Second) // 欸超时变成50s了
 	resp, err := download.Request{
 		Method: http.MethodGet,
 		URL: signServer + "register" + fmt.Sprintf("?uin=%v&android_id=%v&guid=%v&qimei36=%v&key=%s",
