@@ -305,7 +305,8 @@ func energy(uin uint64, id string, _ string, salt []byte) ([]byte, error) {
 	return data, nil
 }
 
-// signSubmit 提交的操作类型
+// signSubmit
+// 提交回调 buffer
 func signSubmit(uin string, cmd string, callbackID int64, buffer []byte, t string) {
 	signServer := base.SignServer
 	if !strings.HasSuffix(signServer, "/") {
@@ -319,6 +320,7 @@ func signSubmit(uin string, cmd string, callbackID int64, buffer []byte, t strin
 		endl = "."
 	}
 	log.Infof("submit %v: uin=%v, cmd=%v, callbackID=%v, buffer=%v%s", t, uin, cmd, callbackID, buffer[:tail], endl)
+
 	_, err := download.Request{
 		Method: http.MethodGet,
 		URL: signServer + "submit" + fmt.Sprintf("?uin=%v&cmd=%v&callback_id=%v&buffer=%v",
@@ -329,15 +331,17 @@ func signSubmit(uin string, cmd string, callbackID int64, buffer []byte, t strin
 	}
 }
 
-// signCallback request token 和签名的回调
+// signCallback
+// 刷新 token 和签名的回调
 func signCallback(uin string, results []gjson.Result, t string) {
 	for _, result := range results {
 		cmd := result.Get("cmd").String()
 		callbackID := result.Get("callbackId").Int()
 		body, _ := hex.DecodeString(result.Get("body").String())
 		ret, err := cli.SendSsoPacket(cmd, body)
-		if err != nil {
-			log.Warnf("callback error: %v", err)
+		if err != nil || len(ret) == 0 {
+			log.Warnf("Callback error: %v, Or response data is empty", err)
+			continue // 发送 SsoPacket 出错或返回数据为空时跳过
 		}
 		signSubmit(uin, cmd, callbackID, ret, t)
 	}
@@ -423,6 +427,7 @@ func signRefreshToken(uin string) error {
 }
 
 var missTokenCount = uint64(0)
+var lastToken = ""
 
 func sign(seq uint64, uin string, cmd string, qua string, buff []byte) (sign []byte, extra []byte, token []byte, err error) {
 	i := 0
@@ -441,8 +446,8 @@ func sign(seq uint64, uin string, cmd string, qua string, buff []byte) (sign []b
 				defer registerLock.Unlock()
 				err := signServerDestroy(uin)
 				if err != nil {
-					log.Warnln(err)
-					return nil, nil, nil, err
+					log.Warnln(err) // 实例真的丢失时则必出错，或许应该不 return , 以重新获取本次签名
+					// return nil, nil, nil, err
 				}
 				signRegister(base.Account.Uin, device.AndroidId, device.Guid, device.QImei36, base.Key)
 			}
@@ -461,6 +466,10 @@ func sign(seq uint64, uin string, cmd string, qua string, buff []byte) (sign []b
 			continue
 		}
 		break
+	}
+	if tokenString := hex.EncodeToString(token); lastToken != tokenString {
+		log.Infof("token 已更新：%v -> %v", lastToken, tokenString)
+		lastToken = tokenString
 	}
 	return sign, extra, token, err
 }
